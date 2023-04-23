@@ -1,0 +1,284 @@
+#include <iostream>  // Ââîä-âûâîä íà êîíñîëü
+#include <iomanip>  // Ôîðìàòèðîâàíèå âûâîäà íà êîíñîëü
+#include <fstream>  // Äëÿ ðàáîòû ñ ôàéëàìè
+#include <vector>
+#include <map>
+#include <list>
+#include <cmath>
+
+using namespace std;
+
+const int N = 4000;
+
+
+struct Record {
+    char fio[30];
+    short int department;
+    char post[22];
+    char birth_date[10];
+};
+
+
+struct Node {
+    Record record;
+    Node *next;
+};
+
+
+string prompt(const string &str) {
+    cout << str;
+    cout << "\n> ";
+    string ans;
+    cin >> ans;
+    return ans;
+}
+
+
+int strcomp(const string &str1, const string &str2, int len = 10000000) {
+    for (int i = 0; i < len; ++i) {
+        if (str1[i] == '\0' and str2[i] == '\0') {
+            return 0;
+        } else if (str1[i] == ' ' and str2[i] != ' ') {
+            return -1;
+        } else if (str1[i] != ' ' and str2[i] == ' ') {
+            return 1;
+        } else if (str1[i] < str2[i]) {
+            return -1;
+        } else if (str1[i] > str2[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+Node *load_to_memory() {
+    Node *root = nullptr;
+    ifstream file("../testBase2.dat", ios::binary);
+    if (not file.is_open()) {
+        return nullptr;
+    }
+
+    for (int i = 0; i < N; ++i) {
+        Record record;
+        file.read((char *) &record, sizeof(Record));
+        root = new Node{record, root};
+    }
+    file.close();
+    return root;
+}
+
+struct body {
+    Node *head;
+    Node *tail;
+};
+
+
+int compare(const Record &record1, const Record &record2) {
+    int date_comparate_arr[] = {0, 1};
+    for (int i : date_comparate_arr) {
+        if (record1.birth_date[i] > record2.birth_date[i]) {
+            return -1;
+        } else if (record1.birth_date[i] < record2.birth_date[i]) {
+            return 1;
+        }
+    }
+    if (strcomp(record1.fio, record2.fio) > 0) {
+        return -1;
+    } else if (strcomp(record1.fio, record2.fio) < 0) {
+        return 1;
+    }
+    return 0;
+}
+
+void MergeSort(Node *&S, int n) {
+    int t, q, r, i, m;
+    Node *a, *b, *k, *p;
+    body arr[2];
+    a = S;
+    b = S->next;
+    k = a;
+    p = b;
+    int x = 0;
+    while (p != nullptr) {
+        k->next = p->next;
+        k = p;
+        p = p->next;
+    }
+    t = 1;
+    Node *temp1 = a, *temp2 = b;
+    while (temp1 != nullptr) {
+        temp1 = temp1->next;
+    }
+    while (temp2 != nullptr) {
+        temp2 = temp2->next;
+    }
+
+
+    while (t < n) {
+        arr[0].tail = arr[0].head = nullptr;
+        arr[1].tail = arr[1].head = nullptr;
+        i = 0;
+        m = n;
+        while (m > 0) {
+            if (m >= t) q = t;
+            else q = m;
+            m = m - q;
+            if (m >= t) r = t;
+            else r = m;
+            m = m - r;
+            while (q != 0 && r != 0) {
+                if (compare(a->record, b->record) > 0) {
+                    if (arr[i].tail == nullptr) {
+                        arr[i].tail = arr[i].head = a;
+                    } else {
+                        arr[i].tail->next = a;
+                        arr[i].tail = a;
+                    }
+                    a = a->next;
+                    q--;
+
+                } else {
+
+                    if (arr[i].tail == nullptr) {
+                        arr[i].tail = arr[i].head = b;
+                    } else {
+                        arr[i].tail->next = b;
+                        arr[i].tail = b;
+                    }
+                    b = b->next;
+                    r--;
+
+                }
+            }
+            while (q > 0) {
+                if (arr[i].tail == nullptr) {
+                    arr[i].tail = arr[i].head = a;
+                } else {
+                    arr[i].tail->next = a;
+                    arr[i].tail = a;
+                }
+                a = a->next;
+                q--;
+            }
+            while (r > 0) {
+                if (arr[i].tail == nullptr) {
+                    arr[i].tail = arr[i].head = b;
+                } else {
+                    arr[i].tail->next = b;
+                    arr[i].tail = b;
+                }
+                b = b->next;
+                r--;
+            }
+            i = 1 - i;
+            x++;
+        }
+        a = arr[0].head;
+        b = arr[1].head;
+        t = 2 * t;
+    }
+    arr[0].tail->next = nullptr;
+    S = arr[0].head;
+}
+
+void print_head() {
+    std::cout << "Record  Fio                     Department  Post                  Birth date\n";
+}
+
+void print_record(Record *record) {
+    std::cout << "  " << record->fio
+              << "  " << setw(3) << record->department
+              << "  " << record->post
+              << "  " << record->birth_date << "\n";
+}
+
+void show_list(Record *ind_arr[], int n = N) {
+    int ind = 0;
+    while (true) {
+        print_head();
+        for (int i = 0; i < 20; i++) {
+            Record *record = ind_arr[ind + i];
+            cout << "[" << setw(4) << ind + i + 1 << "]";
+            print_record(record);
+
+        }
+        string chose = prompt("w: Next page\t"
+                              "q: Last page\t"
+                              "e: Skip 10 next pages\n"
+                              "s: Prev page\t"
+                              "a: First page\t"
+                              "d: Skip 10 prev pages\n"
+                              "Any key: Exit");
+        switch (chose[0]) {
+            case 'w':
+                ind += 20;
+                break;
+            case 's':
+                ind -= 20;
+                break;
+            case 'a':
+                ind = 0;
+                break;
+            case 'q':
+                ind = n - 20;
+                break;
+            case 'd':
+                ind -= 200;
+                break;
+            case 'e':
+                ind += 200;
+                break;
+            default:
+                return;
+        }
+        if (ind < 0) {
+            ind = 0;
+        } else if (ind > n - 20) {
+            ind = n - 20;
+        }
+    }
+}
+
+
+void make_index_array(Record *arr[], Node *root, int n = N) {
+    Node *p = root;
+    for (int i = 0; i < n; i++) {
+        arr[i] = &(p->record);
+        p = p->next;
+    }
+}
+
+void mainloop(Record *unsorted_ind_array[], Record *sorted_ind_array[]) {
+    int search_ind, search_n = -1;
+    while (true) {
+        string chose = prompt("1: Show unsorted list\n"
+                              "2: Show sorted list\n"
+                              "Any key: Exit");
+        switch (chose[0]) {
+            case '1':
+                show_list(unsorted_ind_array);
+                break;
+            case '2':
+                show_list(sorted_ind_array);
+                break;
+            default:
+                return;
+        }
+    }
+}
+
+
+int main() {
+    Node *root = load_to_memory();
+    if (!root) {
+        cout << "File not found" << endl;
+        return 1;
+    }
+    Record *unsorted_ind_arr[N];
+    Record *sorted_ind_arr[N];
+    make_index_array(unsorted_ind_arr, root);
+    MergeSort(root, N);
+    make_index_array(sorted_ind_arr, root);
+    mainloop(unsorted_ind_arr, sorted_ind_arr);
+}

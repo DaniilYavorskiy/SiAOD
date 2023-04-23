@@ -1,0 +1,123 @@
+#include <iostream>
+
+using namespace std;
+
+struct node
+{
+ int data;
+ struct node *left;
+ struct node *right;
+} Node;
+
+struct node *newNode(int data) {
+  struct node *node = (struct node *)malloc(sizeof(struct node));
+  node->data = data;
+  node->left = NULL;
+  node->right = NULL;
+  return (node);
+}
+
+void traversePreOrder(struct node *temp) {
+  if (temp != NULL) {
+    cout << " " << temp->data;
+    traversePreOrder(temp->left);
+    traversePreOrder(temp->right);
+  }
+}
+
+void traverseInOrder(struct node *temp) {
+  if (temp != NULL) {
+    traverseInOrder(temp->left);
+    cout << " " << temp->data;
+    traverseInOrder(temp->right);
+  }
+}
+
+void traversePostOrder(struct node *temp) {
+  if (temp != NULL) {
+    traversePostOrder(temp->left);
+    traversePostOrder(temp->right);
+    cout << " " << temp->data;
+  }
+}
+
+int HeightOfTree(struct node * temp)
+{
+    if(temp == 0)
+        return 0;
+    int left, right;
+    if (temp->left != NULL) {
+        left = HeightOfTree(temp -> left);
+    }else 
+        left = -1;
+    if (temp->right != NULL) {
+        right = HeightOfTree(temp -> right);
+    }else 
+        right = -1;
+    int max = left > right ? left : right;
+    return max+1;
+
+}
+
+int NodeCount(struct node * temp){
+    if (temp->left == NULL && temp->right == NULL)
+        return 1;
+    int left, right;
+    if (temp->left != NULL)
+        left = NodeCount(temp->left);
+    else
+        left = 0;
+    if (temp->right != NULL)
+        right = NodeCount(temp->right); 
+    else 
+        right = 0;
+
+    return left+right+1;
+}
+
+int Sum(struct node * temp) {
+  if (temp == NULL)
+    return 0;
+  else
+    return (temp -> data + Sum(temp->left) + Sum(temp->right));
+}
+
+//подсчёт кол-ва вершин на каждом уровне
+int countOnLevel(struct node * temp, int N)
+{
+    if (temp == 0)
+        return 0;
+    if (N == 0)
+        return 1;
+    return countOnLevel(temp->left, N - 1) + countOnLevel(temp->right, N - 1);
+}
+
+int main() {
+  node *root = newNode(1);
+  root->right = newNode(3);
+  root->right->left = newNode(2);
+  root->right->right = newNode(6);
+  root->right->right->left = newNode(5);
+  root->right->right->left->left = newNode(4);
+  
+  cout <<"\nСверху вниз: ";
+  traversePreOrder(root);
+  cout << "\nСлева на право: ";
+  traverseInOrder(root);
+  cout << "\nСнизу вверх: ";
+  traversePostOrder(root);
+  cout<<"\nРазмер дерева: "<< NodeCount(root);
+  cout<<"\nКонтрольная сумма: "<< Sum(root);
+  cout<<"\nВысота дерева: "<< HeightOfTree(root);
+  
+  //кол-во вершин на каждом уровне
+  int level = HeightOfTree(root);
+  int sum = 0;
+  for(int i = 0; i <= level; i++){
+    int temp = countOnLevel(root,i);   
+    sum += (i + 1) * temp;   
+  }
+  cout<<"\nСредняя высота дерева: "<< sum / NodeCount(root);
+  cout<<"\nСредняя высота дерева: "<< sum;
+  return 0;
+}
